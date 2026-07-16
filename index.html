@@ -330,7 +330,6 @@ let teams = [];
 let scores = {};   // "A-0" -> [home, away]
 
 /* ---------- storage (in-memory; swap to localStorage on your own host) ---------- */
-let mem = null;
 function save(){ localStorage.setItem(KEY, JSON.stringify({roster:document.getElementById('roster').value, scores, lockedC, lockedP})); }
 function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } }
 
