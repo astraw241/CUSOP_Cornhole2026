@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cornhole — Pharmacy Orientation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --field:#2E5E3A;        /* board paint green */
+    --field-dark:#1E3F27;
+    --canvas:#F2EDE3;       /* raw duck canvas */
+    --canvas-dim:#E2DACB;
+    --corn:#E8A317;         /* bag gold */
+    --ink:#171412;
+    --ink-soft:#5C554C;
+    --line:#CFC5B4;
+    --win:#2E5E3A;
+    --loss:#A33B2A;
+    --shadow:0 1px 0 rgba(23,20,18,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:'Public Sans',system-ui,sans-serif;
+    background:var(--canvas);
+    color:var(--ink);
+    line-height:1.5;
+    padding:0 0 96px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    background:var(--field);
+    color:var(--canvas);
+    padding:28px 0 24px;
+    border-bottom:5px solid var(--corn);
+  }
+  .masthead .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  h1{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:800;
+    font-size:clamp(1.9rem,5vw,3rem);
+    line-height:.95;
+    letter-spacing:-.02em;
+  }
+  h1 span{display:block;font-size:.42em;font-weight:600;color:var(--corn);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+  .clock{font-family:'Roboto Mono',monospace;font-size:.8rem;color:#B8CFBE;text-align:right;line-height:1.7;}
+  .clock b{color:var(--canvas);font-weight:500;}
+
+  /* ---------- Round rail ---------- */
+  .rail{position:sticky;top:0;z-index:20;background:var(--field-dark);border-bottom:1px solid rgba(255,255,255,.1);}
+  .rail .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
+  .rail .wrap::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:1;min-width:96px;
+    background:none;border:none;
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:.82rem;
+    letter-spacing:.1em;text-transform:uppercase;
+    color:#8FAE97;padding:14px 10px;cursor:pointer;
+    border-bottom:3px solid transparent;transition:color .15s,border-color .15s;
+    white-space:nowrap;
+  }
+  .tab:hover{color:var(--canvas);}
+  .tab[aria-selected="true"]{color:var(--corn);border-bottom-color:var(--corn);}
+  .tab .n{font-family:'Roboto Mono',monospace;font-size:.7rem;opacity:.6;margin-left:6px;}
+  .tab:focus-visible{outline:2px solid var(--corn);outline-offset:-2px;}
+
+  /* ---------- Panels ---------- */
+  .panel{display:none;padding-top:28px;}
+  .panel.on{display:block;}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-.01em;}
+  .hint{color:var(--ink-soft);font-size:.86rem;max-width:60ch;margin-bottom:20px;}
+
+  /* ---------- Board cards ---------- */
+  .boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+  .board{
+    background:#fff;border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .board-hd{
+    display:flex;align-items:center;gap:10px;
+    background:var(--canvas-dim);border-bottom:1px solid var(--line);
+    padding:7px 12px;
+  }
+  .board-no{
+    font-family:'Roboto Mono',monospace;font-weight:700;font-size:.68rem;letter-spacing:.1em;
+    background:var(--field);color:var(--canvas);padding:3px 7px;border-radius:2px;
+  }
+  .wave{font-family:'Roboto Mono',monospace;font-size:.68rem;color:var(--ink-soft);letter-spacing:.06em;}
+  .done-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s;}
+  .board.filled .done-dot{background:var(--corn);}
+
+  .row{display:flex;align-items:center;gap:10px;padding:9px 12px;}
+  .row + .row{border-top:1px dashed var(--line);}
+  .tname{flex:1;font-size:.9rem;font-weight:500;min-width:0;}
+  .tname i{display:block;font-style:normal;font-size:.72rem;color:var(--ink-soft);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .seed{font-family:'Roboto Mono',monospace;font-size:.7rem;color:var(--ink-soft);margin-right:2px;}
+  input[type=number]{
+    width:60px;padding:7px 6px;text-align:center;
+    font-family:'Roboto Mono',monospace;font-size:1rem;font-weight:700;
+    border:1px solid var(--line);border-radius:2px;background:var(--canvas);color:var(--ink);
+  }
+  input[type=number]:focus{outline:2px solid var(--corn);outline-offset:1px;border-color:var(--corn);background:#fff;}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  input[type=number]{-moz-appearance:textfield;}
+  .row.w{background:rgba(46,94,58,.06);}
+  .row.w .tname{font-weight:700;}
+  .row.w .tname::after{content:"W";float:right;font-family:'Roboto Mono',monospace;font-size:.62rem;background:var(--win);color:#fff;padding:1px 5px;border-radius:2px;margin-left:6px;}
+
+  /* ---------- Standings ---------- */
+  .tablewrap{background:#fff;border:1px solid var(--line);border-radius:3px;overflow-x:auto;box-shadow:var(--shadow);}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;}
+  th{
+    font-family:'Roboto Mono',monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-soft);text-align:left;padding:10px 12px;
+    border-bottom:1px solid var(--line);background:var(--canvas-dim);white-space:nowrap;
+  }
+  td{padding:10px 12px;border-bottom:1px solid #EFEAE0;white-space:nowrap;}
+  td.team{white-space:normal;min-width:180px;}
+  td.team i{display:block;font-style:normal;font-size:.74rem;color:var(--ink-soft);}
+  .num{font-family:'Roboto Mono',monospace;font-weight:500;text-align:right;}
+  .pos{font-family:'Roboto Mono',monospace;color:var(--ink-soft);width:34px;}
+  tr.cut{border-bottom:3px solid var(--corn);}
+  tr.in .pos{color:var(--corn);font-weight:700;}
+  tr.in{background:rgba(232,163,23,.07);}
+  .diff.p{color:var(--win);}
+  .diff.n{color:var(--loss);}
+  .played{font-family:'Roboto Mono',monospace;font-size:.72rem;color:var(--ink-soft);}
+
+  /* ---------- Championship ---------- */
+  .champ{
+    background:var(--field);color:var(--canvas);border-radius:3px;padding:28px;
+    border-left:5px solid var(--corn);
+  }
+  .champ .lbl{font-family:'Roboto Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--corn);margin-bottom:16px;}
+  .champ .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;}
+  .champ .side{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.25rem;line-height:1.15;}
+  .champ .side i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.8rem;color:#B8CFBE;margin-top:5px;}
+  .champ .side.r{text-align:right;}
+  .champ .x{font-family:'Roboto Mono',monospace;color:var(--corn);font-size:.9rem;}
+  .champ .pending{color:#B8CFBE;font-size:.9rem;font-family:'Public Sans',sans-serif;font-weight:400;}
+  .tiebreak{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15);font-size:.82rem;color:#B8CFBE;}
+  .tiebreak b{color:var(--corn);font-weight:500;}
+
+  /* placement matchup cards */
+  .vs4{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
+  .mini{border:1px solid rgba(255,255,255,.18);border-radius:3px;padding:14px;}
+  .mini-lbl{font-family:'Roboto Mono',monospace;font-size:.62rem;letter-spacing:.14em;color:var(--corn);text-transform:uppercase;}
+  .mini-t{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.02rem;margin-top:7px;line-height:1.2;}
+  .mini-x{font-family:'Roboto Mono',monospace;font-size:.68rem;color:#8FAE97;margin:3px 0;}
+
+  /* podium */
+  .podium{list-style:none;counter-reset:none;}
+  .podium li{display:flex;align-items:baseline;gap:14px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.12);}
+  .podium li:last-child{border-bottom:none;}
+  .podium .pl{
+    font-family:'Roboto Mono',monospace;font-weight:700;font-size:.78rem;
+    color:var(--field);background:var(--corn);border-radius:2px;padding:2px 8px;flex:none;
+  }
+  .podium li:nth-child(n+3) .pl{background:rgba(255,255,255,.2);color:var(--canvas);}
+  .podium .pn{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.1rem;}
+  .podium .pn i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.78rem;color:#B8CFBE;margin-top:2px;}
+  td.team i.goes{color:var(--corn);font-size:.68rem;font-family:'Roboto Mono',monospace;margin-top:2px;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    background:rgba(30,63,39,.97);backdrop-filter:blur(8px);
+    border-top:1px solid rgba(255,255,255,.12);
+  }
+  .toolbar .wrap{display:flex;gap:10px;align-items:center;padding-top:11px;padding-bottom:11px;}
+  .status{font-family:'Roboto Mono',monospace;font-size:.7rem;color:#8FAE97;margin-right:auto;}
+  .status b{color:var(--corn);}
+  button.act{
+    font-family:'Public Sans',sans-serif;font-weight:700;font-size:.78rem;
+    padding:8px 14px;border-radius:2px;border:1px solid rgba(255,255,255,.25);
+    background:none;color:var(--canvas);cursor:pointer;transition:background .15s;
+  }
+  button.act:hover{background:rgba(255,255,255,.1);}
+  button.act.go{background:var(--corn);color:var(--ink);border-color:var(--corn);}
+  button.act.go:hover{background:#F2B437;}
+  button.act:focus-visible{outline:2px solid var(--corn);outline-offset:2px;}
+
+  .setup{background:#fff;border:1px solid var(--line);border-radius:3px;padding:18px;box-shadow:var(--shadow);}
+  .setup p{font-size:.86rem;color:var(--ink-soft);margin-bottom:12px;}
+  textarea{
+    width:100%;min-height:300px;padding:12px;
+    font-family:'Roboto Mono',monospace;font-size:.8rem;line-height:1.7;
+    border:1px solid var(--line);border-radius:2px;background:var(--canvas);color:var(--ink);resize:vertical;
+  }
+  textarea:focus{outline:2px solid var(--corn);outline-offset:1px;}
+  .setup .act{margin-top:12px;border-color:var(--line);color:var(--ink);}
+  .setup .act.go{color:var(--ink);}
+
+  @media (max-width:640px){
+    .masthead .wrap{flex-direction:column;align-items:flex-start;}
+    .clock{text-align:left;}
+    .boards{grid-template-columns:1fr;}
+    .champ .vs{grid-template-columns:1fr;text-align:center;}
+    .champ .side.r{text-align:center;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+  @media print{
+    .rail,.toolbar,.tab{display:none;}
+    .panel{display:block!important;page-break-after:always;}
+    body{background:#fff;padding-bottom:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1><span>Cedarville Pharmacy Orientation</span>Cornhole 2026</h1>
+    <div class="clock">
+      <div>Rounds A · B · C &nbsp;<b>5 min each</b></div>
+      <div>Championship &nbsp;<b>1:15 PM</b></div>
+    </div>
+  </div>
+</header>
+
+<nav class="rail" role="tablist" aria-label="Tournament rounds">
+  <div class="wrap">
+    <button class="tab" role="tab" aria-selected="true" data-p="A">Round A<span class="n" id="nA"></span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="B">Round B<span class="n" id="nB"></span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="C">Round C<span class="n" id="nC"></span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="S">Standings</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="F">Final</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="T">Teams</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section class="panel on" data-panel="A">
+    <div class="panel-head"><h2>Round A</h2><span class="played" id="tA"></span></div>
+    <p class="hint">Fixed pairings: 1v2, 3v4, and so on down the list. Enter both scores — the winner marks itself.</p>
+    <div class="boards" id="gA"></div>
+  </section>
+
+  <section class="panel" data-panel="B">
+    <div class="panel-head"><h2>Round B</h2><span class="played" id="tB"></span></div>
+    <p class="hint">Cross-pairings: top half of the field meets the bottom half, so nobody replays a Round A opponent.</p>
+    <div class="boards" id="gB"></div>
+  </section>
+
+  <section class="panel" data-panel="C">
+    <div class="panel-head"><h2>Round C</h2><span class="played" id="tC"></span></div>
+    <p class="hint" id="hC"></p>
+    <div class="boards" id="gC"></div>
+  </section>
+
+  <section class="panel" data-panel="S">
+    <div class="panel-head"><h2>Standings</h2><span class="played">Wins, then point differential</span></div>
+    <p class="hint">The gold band marks the cut. Top two at the end of Round C play at 1:15.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th></th><th>Team</th><th class="num">W–L</th><th class="num">Diff</th>
+          <th class="num">PF</th><th class="num">PA</th><th class="num">GP</th>
+        </tr></thead>
+        <tbody id="sBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" data-panel="F">
+    <div class="panel-head"><h2>Placement round</h2><span class="played">1:15 PM</span></div>
+    <p class="hint">Top four from pool play. Two boards at once: 1v2 for the championship, 3v4 for third place.</p>
+    <div class="champ" id="champ"></div>
+    <div class="boards" id="gP" style="margin-top:16px;"></div>
+  </section>
+
+  <section class="panel" data-panel="T">
+    <div class="panel-head"><h2>Teams</h2><span class="played">One per line</span></div>
+    <p class="hint">Format: <code>Team name | Player one / Player two</code> — the players part is optional. Order sets the Round A pairings.</p>
+    <div class="setup">
+      <p>Paste your roster, then rebuild. Scores are cleared on rebuild.</p>
+      <textarea id="roster" spellcheck="false"></textarea>
+      <button class="act go" id="rebuild">Rebuild tournament</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="status" id="status"></span>
+    <button class="act" id="print">Print</button>
+    <button class="act" id="clear">Clear scores</button>
+  </div>
+</div>
+
+<script>
+const DEFAULT_ROSTER = `Cornazepam | Dr. Grasser / Dr. Barnhart
+Adverse Corndtions | Blair / Hannah
+Baggin' and Braggin | Steve / Rusty
+Sack Attack | Paul / Todd
+Blood, Sweat & Ears | Kate Sheets / Sawyer Ezzell
+Bilbo Bags In | Eric Brauch / Nick Ornella
+The Michigan Cornhuskers | Colin / Matt
+Are we too old for this? | Matt / Nate
+Team 9
+Team 10
+Team 11
+Team 12
+Team 13
+Team 14
+Team 15
+Team 16
+Team 17
+Team 18
+Team 19
+Team 20
+Team 21
+Team 22
+Team 23
+Team 24`;
+
+const BOARDS = 6;
+const PLACES = 4;   // placement round size: top 4 -> 1v2 (final), 3v4 (third place)
+const KEY = 'cornhole2026';
+
+let teams = [];
+let scores = {};   // "A-0" -> [home, away]
+
+/* ---------- storage (in-memory; swap to localStorage on your own host) ---------- */
+let mem = null;
+function save(){ localStorage.setItem(KEY, JSON.stringify({roster:document.getElementById('roster').value, scores, lockedC, lockedP})); }
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } }
+
+/* ---------- roster ---------- */
+function parseRoster(txt){
+  return txt.split('\n').map(l=>l.trim()).filter(Boolean).map((line,i)=>{
+    const [name,players] = line.split('|').map(s=>s&&s.trim());
+    return {id:i, seed:i+1, name:name||`Team ${i+1}`, players:players||''};
+  });
+}
+
+/* ---------- pairings ---------- */
+// Round A: adjacent pairs, 1v2 3v4 ...
+function roundA(){
+  const g=[];
+  for(let i=0;i<teams.length;i+=2) if(teams[i+1]) g.push([teams[i].id,teams[i+1].id]);
+  return g;
+}
+// Round B: cross the field — top half vs bottom half
+function roundB(){
+  const n=teams.length, h=Math.floor(n/2), g=[];
+  for(let i=0;i<h;i++) if(teams[i+h]) g.push([teams[i].id,teams[i+h].id]);
+  return g;
+}
+// Round C: seed by A/B results — 1v2, 3v4 in current standings, skipping rematches
+function roundC(){
+  const rank = standings(['A','B']).map(r=>r.id);
+  const used = new Set(), g=[];
+  const met = new Set();
+  [...roundA(),...roundB()].forEach(([a,b])=>{met.add(a+'-'+b);met.add(b+'-'+a);});
+  for(let i=0;i<rank.length;i++){
+    const a=rank[i];
+    if(used.has(a)) continue;
+    let pick=-1, fallback=-1;
+    for(let j=i+1;j<rank.length;j++){
+      const b=rank[j];
+      if(used.has(b)) continue;
+      if(fallback<0) fallback=b;
+      if(!met.has(a+'-'+b)){ pick=b; break; }
+    }
+    if(pick<0) pick=fallback;
+    if(pick<0) continue;
+    used.add(a); used.add(pick);
+    g.push([a,pick]);
+  }
+  return g;
+}
+// Round C pairings depend on A/B results, so they move as scores come in.
+// Once locked, they're frozen — otherwise score keys (C-0, C-1...) would
+// silently re-attach to different matchups. Locked when you open Round C
+// with A and B complete, or as soon as any Round C score is entered.
+let lockedC = null;
+function abDone(){
+  return ['A','B'].every(r=>games(r).every((_,i)=>{
+    const s=scores[`${r}-${i}`]; return s && s[0]!=null && s[1]!=null;
+  }));
+}
+function lockC(){ if(!lockedC) lockedC = roundC(); return lockedC; }
+function games(r){
+  if(r==='A') return roundA();
+  if(r==='B') return roundB();
+  if(r==='P') return lockedP || roundP();
+  return lockedC || roundC();
+}
+
+/* ---------- placement round ----------
+   Seeded from pool play (A/B/C). Top PLACES teams pair off 1v2, 3v4, ...
+   1v2 is the championship; 3v4 decides third. Runs on separate boards at once. */
+let lockedP = null;
+function roundP(){
+  const rank = standings(['A','B','C']).slice(0, PLACES);
+  const g = [];
+  for(let i=0;i<rank.length;i+=2) if(rank[i+1]) g.push([rank[i].id, rank[i+1].id]);
+  return g;
+}
+function lockP(){ if(!lockedP) lockedP = roundP(); return lockedP; }
+function placeLabels(){
+  // ['1st / 2nd', '3rd / 4th', ...] — one per placement game
+  const ORD = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th'];
+  return games('P').map((_,i)=>`${ORD[i*2]} / ${ORD[i*2+1]}`);
+}
+function placementDone(){
+  const g = games('P');
+  return g.length>0 && g.every((_,i)=>{
+    const s=scores[`P-${i}`]; return s && s[0]!=null && s[1]!=null;
+  });
+}
+
+/* ---------- standings ---------- */
+// rounds defaults to all three. Round C seeding passes ['A','B'] to avoid
+// recursing back into roundC() via games('C').
+function standings(rounds){
+  const t = {};
+  teams.forEach(x=>t[x.id]={...x,w:0,l:0,pf:0,pa:0,gp:0});
+  (rounds||['A','B','C']).forEach(r=>{
+    games(r).forEach((pair,i)=>{
+      const s = scores[`${r}-${i}`];
+      if(!s || s[0]==null || s[1]==null) return;
+      const [x,y]=pair, [sx,sy]=s;
+      t[x].pf+=sx; t[x].pa+=sy; t[x].gp++;
+      t[y].pf+=sy; t[y].pa+=sx; t[y].gp++;
+      if(sx>sy){t[x].w++;t[y].l++;} else if(sy>sx){t[y].w++;t[x].l++;}
+    });
+  });
+  return Object.values(t).map(x=>({...x,diff:x.pf-x.pa}))
+    .sort((a,b)=> b.w-a.w || b.diff-a.diff || b.pf-a.pf || a.seed-b.seed);
+}
+// Pool play only (A/B/C). Placement games are deliberately excluded from
+// standings so they can't feed back into the seeding that produced them.
+function complete(){
+  return ['A','B','C'].every(r=>games(r).every((_,i)=>{
+    const s=scores[`${r}-${i}`]; return s && s[0]!=null && s[1]!=null;
+  }));
+}
+function roundDone(r){
+  const g=games(r);
+  const n=g.filter((_,i)=>{const s=scores[`${r}-${i}`];return s&&s[0]!=null&&s[1]!=null;}).length;
+  return [n,g.length];
+}
+
+/* ---------- render ---------- */
+function nameOf(id){ return teams.find(t=>t.id===id); }
+
+function drawRound(r){
+  const wrap = document.getElementById('g'+r);
+  const g = games(r);
+  if(r==='C'){
+    const el = document.getElementById('hC');
+    if(lockedC) el.textContent = 'Pairings are locked. Seeded from Rounds A and B — closest records meet, rematches avoided.';
+    else if(abDone()) el.textContent = 'Seeded from Rounds A and B — closest records meet, rematches avoided. Pairings lock when you open this tab.';
+    else el.textContent = 'Preview only. Finish Rounds A and B, then come back — these pairings will change as scores come in.';
+  }
+  const labels = r==='P' ? placeLabels() : null;
+  wrap.innerHTML = g.map((pair,i)=>{
+    const s = scores[`${r}-${i}`] || [null,null];
+    const [a,b] = pair.map(nameOf);
+    const filled = s[0]!=null && s[1]!=null;
+    const wA = filled && s[0]>s[1], wB = filled && s[1]>s[0];
+    const board = (i % BOARDS) + 1;
+    const wave = Math.floor(i / BOARDS) + 1;
+    const waves = Math.ceil(g.length / BOARDS);
+    const tag = labels
+      ? `<span class="wave">plays for ${labels[i]}</span>`
+      : (waves>1?`<span class="wave">wave ${wave} of ${waves}</span>`:'');
+    return `<div class="board ${filled?'filled':''}">
+      <div class="board-hd">
+        <span class="board-no">BOARD ${board}</span>
+        ${tag}
+        <span class="done-dot"></span>
+      </div>
+      <div class="row ${wA?'w':''}">
+        <span class="tname"><span class="seed">${a.seed}</span> ${esc(a.name)}${a.players?`<i>${esc(a.players)}</i>`:''}</span>
+        <input type="number" min="0" inputmode="numeric" value="${s[0]??''}" data-k="${r}-${i}" data-s="0" aria-label="${esc(a.name)} score">
+      </div>
+      <div class="row ${wB?'w':''}">
+        <span class="tname"><span class="seed">${b.seed}</span> ${esc(b.name)}${b.players?`<i>${esc(b.players)}</i>`:''}</span>
+        <input type="number" min="0" inputmode="numeric" value="${s[1]??''}" data-k="${r}-${i}" data-s="1" aria-label="${esc(b.name)} score">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function drawStandings(){
+  const rows = standings();
+  const ORD = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th'];
+  document.getElementById('sBody').innerHTML = rows.map((t,i)=>{
+    const sign = t.diff>0?'p':t.diff<0?'n':'';
+    const inPlace = i<PLACES;
+    const goesTo = inPlace ? `${ORD[Math.floor(i/2)*2]}/${ORD[Math.floor(i/2)*2+1]} game` : '';
+    return `<tr class="${inPlace?'in':''} ${i===PLACES-1?'cut':''}">
+      <td class="pos">${i+1}</td>
+      <td class="team">${esc(t.name)}${t.players?`<i>${esc(t.players)}</i>`:''}${goesTo?`<i class="goes">→ ${goesTo}</i>`:''}</td>
+      <td class="num">${t.w}–${t.l}</td>
+      <td class="num diff ${sign}">${t.diff>0?'+':''}${t.diff}</td>
+      <td class="num">${t.pf}</td><td class="num">${t.pa}</td>
+      <td class="num">${t.gp}</td>
+    </tr>`;
+  }).join('');
+}
+
+function drawChamp(){
+  const el = document.getElementById('champ');
+  const boards = document.getElementById('gP');
+  const rows = standings();
+
+  if(!complete()){
+    const left = ['A','B','C'].reduce((n,r)=>{const[d,t]=roundDone(r);return n+(t-d);},0);
+    el.innerHTML = `<div class="lbl">Placement round — 1:15 PM</div>
+      <div class="pending">${left} pool game${left===1?'':'s'} left to score. The top ${PLACES} lock in when Round C is complete.</div>`;
+    boards.innerHTML = '';
+    return;
+  }
+
+  // Warn when the cut line is decided by tiebreak rather than by play.
+  const last = rows[PLACES-1], next = rows[PLACES];
+  const knife = next && last.w===next.w && last.diff===next.diff;
+  const note = knife
+    ? `<div class="tiebreak"><b>Heads up —</b> ${esc(next.name)} is level with ${esc(last.name)} on wins and differential. ${esc(last.name)} took the last spot on points scored (${last.pf} to ${next.pf}). A one-game playoff would be fairer if you have the time.</div>`
+    : '';
+
+  if(!placementDone()){
+    el.innerHTML = `<div class="lbl">Placement round — 1:15 PM</div>
+      <div class="vs4">${games('P').map((pair,i)=>{
+        const [a,b]=pair.map(nameOf);
+        const L=placeLabels()[i];
+        return `<div class="mini"><span class="mini-lbl">${L}</span>
+          <div class="mini-t">${esc(a.name)}</div>
+          <div class="mini-x">vs</div>
+          <div class="mini-t">${esc(b.name)}</div></div>`;
+      }).join('')}</div>${note}`;
+    boards.innerHTML = '';
+    drawRound('P');
+    return;
+  }
+
+  // Both games in — build the podium.
+  const place = [];
+  games('P').forEach((pair,i)=>{
+    const s = scores[`P-${i}`];
+    const [x,y] = pair.map(nameOf);
+    const xw = s[0]>s[1];
+    place.push(xw?x:y, xw?y:x);
+  });
+  el.innerHTML = `<div class="lbl">Final placings</div>
+    <ol class="podium">${place.map((t,i)=>`<li><span class="pl">${i+1}</span>
+      <span class="pn">${esc(t.name)}${t.players?`<i>${esc(t.players)}</i>`:''}</span></li>`).join('')}</ol>${note}`;
+  drawRound('P');
+}
+
+// Counters, standings and championship — safe to redraw any time (no inputs inside).
+function refreshDerived(){
+  ['A','B','C'].forEach(r=>{
+    const [d,t]=roundDone(r);
+    document.getElementById('n'+r).textContent = `${d}/${t}`;
+    document.getElementById('t'+r).textContent = `${d} of ${t} scored`;
+  });
+  drawStandings(); drawChamp();
+  const tot = ['A','B','C'].reduce((n,r)=>n+roundDone(r)[1],0);
+  const dn  = ['A','B','C'].reduce((n,r)=>n+roundDone(r)[0],0);
+  document.getElementById('status').innerHTML =
+    `${teams.length} teams · ${BOARDS} boards · <b>${dn}/${tot}</b> games scored`;
+  save();
+}
+
+// Full rebuild — only on load, rebuild, or clear. Never while typing.
+function refresh(){
+  ['A','B','C'].forEach(drawRound);
+  refreshDerived();
+}
+
+// Update one board's win highlight without touching the inputs.
+function markBoard(k){
+  const s = scores[k] || [null,null];
+  const filled = s[0]!=null && s[1]!=null;
+  const inputs = document.querySelectorAll(`input[data-k="${k}"]`);
+  if(!inputs.length) return;
+  const board = inputs[0].closest('.board');
+  board.classList.toggle('filled', filled);
+  const rows = board.querySelectorAll('.row');
+  rows[0].classList.toggle('w', filled && s[0]>s[1]);
+  rows[1].classList.toggle('w', filled && s[1]>s[0]);
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- events ---------- */
+document.addEventListener('input', e=>{
+  const i = e.target;
+  if(i.tagName!=='INPUT'||!i.dataset.k) return;
+  const k=i.dataset.k, s=+i.dataset.s;
+  if(!scores[k]) scores[k]=[null,null];
+  scores[k][s] = i.value===''?null:Math.max(0,parseInt(i.value,10)||0);
+  markBoard(k);
+  refreshDerived();
+  // Round C pairings depend on A/B results, so they shift as you type.
+  // Only redraw them when you're not looking at (or typing into) Round C.
+  if(!k.startsWith('C') && !document.querySelector('.panel[data-panel="C"]').classList.contains('on')){
+    drawRound('C');
+  }
+  // Placement scores decide the podium, which lives in the same panel as the
+  // inputs — so redraw it only once a game is complete, never mid-keystroke.
+  if(k.startsWith('P-')){
+    const s2 = scores[k];
+    if(s2 && s2[0]!=null && s2[1]!=null && placementDone()) drawChamp();
+  }
+});
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+    t.setAttribute('aria-selected','true');
+    // Round C is seeded from A/B. Lock the pairings on entry once A/B are done.
+    if(t.dataset.p==='C'){ if(abDone()) lockC(); drawRound('C'); }
+    // Placement seeds off finished pool play; lock on entry so scores can't drift.
+    if(t.dataset.p==='F'){ if(complete()) lockP(); drawChamp(); }
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===t.dataset.p));
+    window.scrollTo({top:0,behavior:'instant'});
+  });
+});
+
+document.getElementById('rebuild').addEventListener('click',()=>{
+  const next = parseRoster(document.getElementById('roster').value);
+  if(next.length<4){ alert('Add at least 4 teams.'); return; }
+  if(next.length%2){ alert(`${next.length} teams — you need an even number so nobody sits out.`); return; }
+  teams = next; scores = {}; lockedC = null; lockedP = null; refresh();
+  alert(`Built for ${teams.length} teams. Scores cleared.`);
+});
+
+document.getElementById('clear').addEventListener('click',()=>{
+  if(confirm('Clear every score? The roster stays.')){ scores={}; lockedC=null; lockedP=null; refresh(); }
+});
+document.getElementById('print').addEventListener('click',()=>window.print());
+
+/* ---------- boot ---------- */
+(function(){
+  const saved = load();
+  document.getElementById('roster').value = saved?.roster || DEFAULT_ROSTER;
+  teams = parseRoster(document.getElementById('roster').value);
+  scores = saved?.scores || {};
+  lockedC = saved?.lockedC || null;
+  lockedP = saved?.lockedP || null;
+  refresh();
+})();
+</script>
+</body>
+</html>
