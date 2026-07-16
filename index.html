@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cornhole — Pharmacy Orientation</title>
+<title>CUSOP Classic — Cornhole 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -272,6 +272,10 @@
   /* practice-mode banner — unmistakable, so nobody mistakes a sim for the real thing */
   body.simming .masthead::before{background:var(--stripe-fine);height:14px;}
   body.simming .simbar{display:block;}
+  .warnbar{
+    background:var(--wag);color:#fff;padding:9px 14px;text-align:center;
+    font-size:.8rem;font-weight:700;position:relative;z-index:50;
+  }
   .simbar{
     display:none;background:var(--wag);color:#fff;text-align:center;
     font-family:'Roboto Mono',monospace;font-size:.68rem;letter-spacing:.16em;
@@ -308,7 +312,7 @@
 <header class="masthead">
   <div class="wrap">
     <div>
-      <h1><span>Cedarville School of Pharmacy · Orientation</span>Cornhole Classic</h1>
+      <h1><span>Cedarville School of Pharmacy · Orientation</span>CUSOP <em>Classic</em></h1>
       <div class="sponsor">Sponsored by Walgreens <span>Yellow Jacket Cornhole 2026</span></div>
     </div>
     <div class="clock">
@@ -437,8 +441,27 @@ let teams = [];
 let scores = {};   // "A-0" -> [home, away]
 
 /* ---------- storage (in-memory; swap to localStorage on your own host) ---------- */
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify({teams, nextId, scores, lockedC, lockedP, simMode})); }catch(e){} }
-function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } }
+// Saves to this browser on this device. Wrapped so that a browser with
+// storage disabled degrades to a working (if forgetful) page rather than
+// throwing during boot and killing every button on the page.
+let storageOK = true;
+function save(){
+  if(!storageOK) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify({teams, nextId, scores, lockedC, lockedP, simMode}));
+  } catch(e){
+    storageOK = false;
+    console.warn('Storage unavailable — scores will not survive a refresh.', e);
+  }
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){
+    storageOK = false;
+    return null;
+  }
 }
 
 /* ---------- roster ----------
@@ -920,24 +943,41 @@ document.getElementById('reset').addEventListener('click',()=>{
 
 /* ---------- boot ---------- */
 (function(){
-  const saved = load();
-  if(saved?.teams?.length){
-    teams = saved.teams;
-    nextId = saved.nextId ?? (Math.max(...teams.map(t=>t.id))+1);
-  } else {
-    teams = parseRoster(DEFAULT_ROSTER);
+  try{
+    const saved = load();
+    if(saved && saved.teams && saved.teams.length){
+      teams = saved.teams;
+      nextId = (saved.nextId !== undefined && saved.nextId !== null)
+        ? saved.nextId : (Math.max.apply(null, teams.map(function(t){return t.id;})) + 1);
+      scores  = saved.scores  || {};
+      lockedC = saved.lockedC || null;
+      lockedP = saved.lockedP || null;
+      simMode = !!saved.simMode;
+    } else {
+      teams = parseRoster(DEFAULT_ROSTER);
+      scores = {}; lockedC = null; lockedP = null; simMode = false;
+    }
+    if(simMode){
+      document.body.classList.add('simming');
+      document.getElementById('sim').textContent = 'Simulate next round';
+    }
+    reseed();
+    refresh();
+    drawRoster();
+    if(!storageOK){
+      var w=document.createElement('div');
+      w.className='warnbar';
+      w.textContent='This browser is blocking storage — scores will not survive a refresh. Print after each round.';
+      document.body.insertBefore(w, document.body.firstChild);
+    }
+  }catch(err){
+    // Never fail silently: a dead page with no message is the worst outcome.
+    console.error('Startup failed:', err);
+    var bar=document.createElement('div');
+    bar.className='warnbar';
+    bar.textContent='Something went wrong starting up: '+err.message+' — try "Reset all", or reload the page.';
+    document.body.insertBefore(bar, document.body.firstChild);
   }
-  scores = saved?.scores || {};
-  lockedC = saved?.lockedC || null;
-  lockedP = saved?.lockedP || null;
-  simMode = !!saved?.simMode;
-  if(simMode){
-    document.body.classList.add('simming');
-    document.getElementById('sim').textContent = 'Simulate next round';
-  }
-  reseed();
-  refresh();
-  drawRoster();
 })();
 </script>
 </body>
