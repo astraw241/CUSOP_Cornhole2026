@@ -9,24 +9,35 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --field:#2E5E3A;        /* board paint green */
-    --field-dark:#1E3F27;
-    --canvas:#F2EDE3;       /* raw duck canvas */
-    --canvas-dim:#E2DACB;
-    --corn:#E8A317;         /* bag gold */
-    --ink:#171412;
-    --ink-soft:#5C554C;
-    --line:#CFC5B4;
-    --win:#2E5E3A;
-    --loss:#A33B2A;
-    --shadow:0 1px 0 rgba(23,20,18,.08);
+    --wag:#C8102E;          /* Walgreens red — sponsor accent */
+    --wag-dk:#8E0B20;
+    --wag-lt:#FF5C73;       /* red lightened for small text on dark (5.5:1) */
+    --jacket:#FFC72C;       /* Cedarville Yellow Jacket gold */
+    --jacket-dk:#E0A800;
+    --carbon:#12141A;       /* near-black, the jacket's other stripe */
+    --carbon-2:#1C1F28;
+    --carbon-3:#262A36;
+    --paper:#F7F5F0;
+    --paper-2:#E9E5DC;
+    --line:#3A3F4D;
+    --line-lt:#D2CCC0;
+    --ink:#12141A;
+    --ink-soft:#6B6558;
+    --win:#1D7A3E;
+    --loss:#C8102E;
+    --shadow:0 2px 0 rgba(0,0,0,.35);
+    /* the signature: yellow-jacket / hazard stripe */
+    --stripe:repeating-linear-gradient(-45deg,
+      var(--jacket) 0 14px, var(--carbon) 14px 28px);
+    --stripe-fine:repeating-linear-gradient(-45deg,
+      var(--jacket) 0 6px, var(--carbon) 6px 12px);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{-webkit-text-size-adjust:100%;}
   body{
     font-family:'Public Sans',system-ui,sans-serif;
-    background:var(--canvas);
-    color:var(--ink);
+    background:var(--carbon);
+    color:var(--paper);
     line-height:1.5;
     padding:0 0 96px;
   }
@@ -34,11 +45,23 @@
 
   /* ---------- Masthead ---------- */
   .masthead{
-    background:var(--field);
-    color:var(--canvas);
-    padding:28px 0 24px;
-    border-bottom:5px solid var(--corn);
+    background:var(--carbon);
+    color:var(--paper);
+    padding:26px 0 22px;
+    position:relative;
+    overflow:hidden;
   }
+  /* hazard stripe across the top edge — the signature */
+  .masthead::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:10px;
+    background:var(--stripe);
+  }
+  /* oversized ghosted stripe block bleeding off the right */
+  .masthead::after{
+    content:"";position:absolute;top:10px;right:-60px;width:280px;bottom:0;
+    background:var(--stripe);opacity:.13;transform:skewX(-12deg);pointer-events:none;
+  }
+  .masthead .wrap{position:relative;z-index:1;padding-top:14px;}
   .masthead .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
   h1{
     font-family:'Bricolage Grotesque',sans-serif;
@@ -47,12 +70,19 @@
     line-height:.95;
     letter-spacing:-.02em;
   }
-  h1 span{display:block;font-size:.42em;font-weight:600;color:var(--corn);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
-  .clock{font-family:'Roboto Mono',monospace;font-size:.8rem;color:#B8CFBE;text-align:right;line-height:1.7;}
-  .clock b{color:var(--canvas);font-weight:500;}
+  h1 span{display:block;font-size:.4em;font-weight:600;color:var(--jacket);letter-spacing:.16em;text-transform:uppercase;margin-bottom:9px;}
+  h1 em{font-style:normal;color:var(--jacket);}
+  .sponsor{
+    display:inline-flex;align-items:center;gap:8px;margin-top:12px;
+    background:var(--wag);color:#fff;padding:5px 12px 5px 10px;border-radius:2px;
+    font-size:.72rem;font-weight:700;letter-spacing:.06em;
+  }
+  .sponsor span{font-family:'Roboto Mono',monospace;font-size:.62rem;font-weight:400;opacity:.85;letter-spacing:.1em;text-transform:uppercase;}
+  .clock{font-family:'Roboto Mono',monospace;font-size:.78rem;color:#8B8578;text-align:right;line-height:1.8;}
+  .clock b{color:var(--jacket);font-weight:500;}
 
   /* ---------- Round rail ---------- */
-  .rail{position:sticky;top:0;z-index:20;background:var(--field-dark);border-bottom:1px solid rgba(255,255,255,.1);}
+  .rail{position:sticky;top:0;z-index:20;background:var(--carbon-2);border-bottom:3px solid var(--wag);}
   .rail .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
   .rail .wrap::-webkit-scrollbar{display:none;}
   .tab{
@@ -60,142 +90,198 @@
     background:none;border:none;
     font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:.82rem;
     letter-spacing:.1em;text-transform:uppercase;
-    color:#8FAE97;padding:14px 10px;cursor:pointer;
-    border-bottom:3px solid transparent;transition:color .15s,border-color .15s;
+    color:#8B8578;padding:14px 10px;cursor:pointer;
+    border-bottom:3px solid transparent;transition:color .15s,border-color .15s,background .15s;
     white-space:nowrap;
   }
-  .tab:hover{color:var(--canvas);}
-  .tab[aria-selected="true"]{color:var(--corn);border-bottom-color:var(--corn);}
+  .tab:hover{color:var(--paper);background:rgba(255,199,44,.07);}
+  .tab[aria-selected="true"]{color:var(--carbon);background:var(--jacket);border-bottom-color:var(--wag);}
+  .tab[aria-selected="true"] .n{opacity:.75;}
   .tab .n{font-family:'Roboto Mono',monospace;font-size:.7rem;opacity:.6;margin-left:6px;}
-  .tab:focus-visible{outline:2px solid var(--corn);outline-offset:-2px;}
+  .tab:focus-visible{outline:2px solid var(--wag);outline-offset:-2px;}
 
   /* ---------- Panels ---------- */
   .panel{display:none;padding-top:28px;}
   .panel.on{display:block;}
   .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
-  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-.01em;}
-  .hint{color:var(--ink-soft);font-size:.86rem;max-width:60ch;margin-bottom:20px;}
+  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.55rem;letter-spacing:-.01em;color:var(--paper);}
+  h2::before{content:'';display:inline-block;width:5px;height:.82em;background:var(--jacket);margin-right:11px;vertical-align:-1px;}
+  .hint{color:#8B8578;font-size:.86rem;max-width:62ch;margin-bottom:20px;}
+  .hint code{background:var(--carbon-3);color:var(--jacket);padding:1px 5px;border-radius:2px;font-family:'Roboto Mono',monospace;font-size:.9em;}
 
   /* ---------- Board cards ---------- */
   .boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
   .board{
-    background:#fff;border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
-    overflow:hidden;
+    background:var(--carbon-2);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+    overflow:hidden;transition:border-color .15s;
   }
+  .board.filled{border-color:var(--jacket-dk);}
   .board-hd{
     display:flex;align-items:center;gap:10px;
-    background:var(--canvas-dim);border-bottom:1px solid var(--line);
-    padding:7px 12px;
+    background:var(--carbon-3);border-bottom:1px solid var(--line);
+    padding:7px 12px;position:relative;
   }
+  .board-hd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--stripe-fine);}
   .board-no{
     font-family:'Roboto Mono',monospace;font-weight:700;font-size:.68rem;letter-spacing:.1em;
-    background:var(--field);color:var(--canvas);padding:3px 7px;border-radius:2px;
+    background:var(--jacket);color:var(--carbon);padding:3px 7px;border-radius:2px;margin-left:6px;
   }
-  .wave{font-family:'Roboto Mono',monospace;font-size:.68rem;color:var(--ink-soft);letter-spacing:.06em;}
-  .done-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s;}
-  .board.filled .done-dot{background:var(--corn);}
+  .wave{font-family:'Roboto Mono',monospace;font-size:.68rem;color:#8B8578;letter-spacing:.06em;}
+  .done-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,box-shadow .2s;}
+  .board.filled .done-dot{background:var(--jacket);box-shadow:0 0 0 3px rgba(255,199,44,.2);}
 
   .row{display:flex;align-items:center;gap:10px;padding:9px 12px;}
   .row + .row{border-top:1px dashed var(--line);}
-  .tname{flex:1;font-size:.9rem;font-weight:500;min-width:0;}
-  .tname i{display:block;font-style:normal;font-size:.72rem;color:var(--ink-soft);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .seed{font-family:'Roboto Mono',monospace;font-size:.7rem;color:var(--ink-soft);margin-right:2px;}
+  .row{transition:background .15s;}
+  .tname{flex:1;font-size:.9rem;font-weight:500;min-width:0;color:var(--paper);}
+  .tname i{display:block;font-style:normal;font-size:.72rem;color:#8B8578;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .seed{font-family:'Roboto Mono',monospace;font-size:.7rem;color:var(--wag-lt);font-weight:700;margin-right:3px;}
   input[type=number]{
     width:60px;padding:7px 6px;text-align:center;
     font-family:'Roboto Mono',monospace;font-size:1rem;font-weight:700;
-    border:1px solid var(--line);border-radius:2px;background:var(--canvas);color:var(--ink);
+    border:1px solid var(--line);border-radius:2px;background:var(--carbon);color:var(--paper);
   }
-  input[type=number]:focus{outline:2px solid var(--corn);outline-offset:1px;border-color:var(--corn);background:#fff;}
+  input[type=number]:focus{outline:2px solid var(--jacket);outline-offset:1px;border-color:var(--jacket);background:var(--carbon-3);}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
   input[type=number]{-moz-appearance:textfield;}
-  .row.w{background:rgba(46,94,58,.06);}
+  .row.w{background:linear-gradient(90deg,rgba(255,199,44,.14),transparent 70%);}
   .row.w .tname{font-weight:700;}
-  .row.w .tname::after{content:"W";float:right;font-family:'Roboto Mono',monospace;font-size:.62rem;background:var(--win);color:#fff;padding:1px 5px;border-radius:2px;margin-left:6px;}
+  .row.w .tname::after{content:"WIN";float:right;font-family:'Roboto Mono',monospace;font-weight:700;font-size:.6rem;background:var(--jacket);color:var(--carbon);padding:1px 6px;border-radius:2px;margin-left:6px;letter-spacing:.06em;}
 
   /* ---------- Standings ---------- */
-  .tablewrap{background:#fff;border:1px solid var(--line);border-radius:3px;overflow-x:auto;box-shadow:var(--shadow);}
+  .tablewrap{background:var(--carbon-2);border:1px solid var(--line);border-radius:3px;overflow-x:auto;box-shadow:var(--shadow);}
   table{width:100%;border-collapse:collapse;font-size:.9rem;}
   th{
     font-family:'Roboto Mono',monospace;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--ink-soft);text-align:left;padding:10px 12px;
-    border-bottom:1px solid var(--line);background:var(--canvas-dim);white-space:nowrap;
+    color:#8B8578;text-align:left;padding:10px 12px;
+    border-bottom:2px solid var(--wag);background:var(--carbon-3);white-space:nowrap;
   }
-  td{padding:10px 12px;border-bottom:1px solid #EFEAE0;white-space:nowrap;}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--paper);}
   td.team{white-space:normal;min-width:180px;}
-  td.team i{display:block;font-style:normal;font-size:.74rem;color:var(--ink-soft);}
+  td.team i{display:block;font-style:normal;font-size:.74rem;color:#8B8578;}
   .num{font-family:'Roboto Mono',monospace;font-weight:500;text-align:right;}
-  .pos{font-family:'Roboto Mono',monospace;color:var(--ink-soft);width:34px;}
-  tr.cut{border-bottom:3px solid var(--corn);}
-  tr.in .pos{color:var(--corn);font-weight:700;}
-  tr.in{background:rgba(232,163,23,.07);}
-  .diff.p{color:var(--win);}
-  .diff.n{color:var(--loss);}
-  .played{font-family:'Roboto Mono',monospace;font-size:.72rem;color:var(--ink-soft);}
+  .pos{font-family:'Roboto Mono',monospace;color:#8B8578;width:34px;}
+  tr.cut td{border-bottom:none;}
+  tr.cut{position:relative;}
+  tr.cut td:first-child::after{content:'';position:absolute;left:0;right:0;height:4px;background:var(--stripe-fine);margin-top:10px;}
+  tr.in .pos{color:var(--jacket);font-weight:700;}
+  tr.in{background:rgba(255,199,44,.08);}
+  .diff.p{color:var(--jacket);}
+  .diff.n{color:#E8556B;}
+  .played{font-family:'Roboto Mono',monospace;font-size:.72rem;color:#8B8578;}
 
   /* ---------- Championship ---------- */
   .champ{
-    background:var(--field);color:var(--canvas);border-radius:3px;padding:28px;
-    border-left:5px solid var(--corn);
+    background:var(--carbon-2);color:var(--paper);border-radius:3px;padding:28px;
+    position:relative;overflow:hidden;border:1px solid var(--line);
   }
-  .champ .lbl{font-family:'Roboto Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--corn);margin-bottom:16px;}
+  .champ::before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--stripe-fine);}
+  .champ .lbl{font-family:'Roboto Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--jacket);margin-bottom:16px;}
   .champ .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;}
   .champ .side{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.25rem;line-height:1.15;}
-  .champ .side i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.8rem;color:#B8CFBE;margin-top:5px;}
+  .champ .side i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.8rem;color:#8B8578;margin-top:5px;}
   .champ .side.r{text-align:right;}
-  .champ .x{font-family:'Roboto Mono',monospace;color:var(--corn);font-size:.9rem;}
-  .champ .pending{color:#B8CFBE;font-size:.9rem;font-family:'Public Sans',sans-serif;font-weight:400;}
-  .tiebreak{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15);font-size:.82rem;color:#B8CFBE;}
-  .tiebreak b{color:var(--corn);font-weight:500;}
+  .champ .x{font-family:'Roboto Mono',monospace;color:var(--wag-lt);font-size:.9rem;font-weight:700;}
+  .champ .pending{color:#8B8578;font-size:.9rem;font-family:'Public Sans',sans-serif;font-weight:400;}
+  .tiebreak{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:.82rem;color:#8B8578;}
+  .tiebreak b{color:var(--wag-lt);font-weight:700;}
 
   /* placement matchup cards */
   .vs4{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
-  .mini{border:1px solid rgba(255,255,255,.18);border-radius:3px;padding:14px;}
-  .mini-lbl{font-family:'Roboto Mono',monospace;font-size:.62rem;letter-spacing:.14em;color:var(--corn);text-transform:uppercase;}
+  .mini{border:1px solid var(--line);border-radius:3px;padding:14px;background:var(--carbon);}
+  .mini-lbl{font-family:'Roboto Mono',monospace;font-size:.62rem;letter-spacing:.14em;color:var(--jacket);text-transform:uppercase;}
   .mini-t{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.02rem;margin-top:7px;line-height:1.2;}
-  .mini-x{font-family:'Roboto Mono',monospace;font-size:.68rem;color:#8FAE97;margin:3px 0;}
+  .mini-x{font-family:'Roboto Mono',monospace;font-size:.68rem;color:var(--wag-lt);margin:3px 0;font-weight:700;}
 
   /* podium */
   .podium{list-style:none;counter-reset:none;}
-  .podium li{display:flex;align-items:baseline;gap:14px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.12);}
+  .podium li{display:flex;align-items:baseline;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);}
   .podium li:last-child{border-bottom:none;}
   .podium .pl{
     font-family:'Roboto Mono',monospace;font-weight:700;font-size:.78rem;
-    color:var(--field);background:var(--corn);border-radius:2px;padding:2px 8px;flex:none;
+    color:var(--carbon);background:var(--jacket);border-radius:2px;padding:2px 8px;flex:none;
   }
-  .podium li:nth-child(n+3) .pl{background:rgba(255,255,255,.2);color:var(--canvas);}
+  .podium li:first-child .pl{background:var(--wag);color:#fff;}
+  .podium li:nth-child(n+3) .pl{background:var(--carbon-3);color:#8B8578;}
   .podium .pn{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.1rem;}
-  .podium .pn i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.78rem;color:#B8CFBE;margin-top:2px;}
-  td.team i.goes{color:var(--corn);font-size:.68rem;font-family:'Roboto Mono',monospace;margin-top:2px;}
+  .podium .pn i{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-weight:400;font-size:.78rem;color:#8B8578;margin-top:2px;}
+  td.team i.goes{color:var(--jacket);font-size:.68rem;font-family:'Roboto Mono',monospace;margin-top:2px;}
 
   /* ---------- Toolbar ---------- */
   .toolbar{
     position:fixed;bottom:0;left:0;right:0;z-index:30;
-    background:rgba(30,63,39,.97);backdrop-filter:blur(8px);
-    border-top:1px solid rgba(255,255,255,.12);
+    background:rgba(18,20,26,.97);backdrop-filter:blur(8px);
+    border-top:3px solid var(--wag);
   }
   .toolbar .wrap{display:flex;gap:10px;align-items:center;padding-top:11px;padding-bottom:11px;}
-  .status{font-family:'Roboto Mono',monospace;font-size:.7rem;color:#8FAE97;margin-right:auto;}
-  .status b{color:var(--corn);}
+  .status{font-family:'Roboto Mono',monospace;font-size:.7rem;color:#8B8578;margin-right:auto;}
+  .status b{color:var(--jacket);}
   button.act{
     font-family:'Public Sans',sans-serif;font-weight:700;font-size:.78rem;
-    padding:8px 14px;border-radius:2px;border:1px solid rgba(255,255,255,.25);
-    background:none;color:var(--canvas);cursor:pointer;transition:background .15s;
+    padding:8px 14px;border-radius:2px;border:1px solid var(--line);
+    background:none;color:var(--paper);cursor:pointer;transition:background .15s,border-color .15s;
   }
-  button.act:hover{background:rgba(255,255,255,.1);}
-  button.act.go{background:var(--corn);color:var(--ink);border-color:var(--corn);}
-  button.act.go:hover{background:#F2B437;}
-  button.act:focus-visible{outline:2px solid var(--corn);outline-offset:2px;}
+  button.act:hover{background:var(--carbon-3);border-color:#5A6070;}
+  button.act.go{background:var(--jacket);color:var(--carbon);border-color:var(--jacket);font-weight:700;}
+  button.act.go:hover{background:#FFD455;}
+  button.act.danger{border-color:var(--wag);color:#FF8A9B;}
+  button.act.danger:hover{background:var(--wag);color:#fff;}
+  button.act.sim{border-color:var(--jacket-dk);color:var(--jacket);}
+  button.act.sim:hover{background:var(--jacket);color:var(--carbon);}
+  button.act:focus-visible{outline:2px solid var(--jacket);outline-offset:2px;}
 
-  .setup{background:#fff;border:1px solid var(--line);border-radius:3px;padding:18px;box-shadow:var(--shadow);}
-  .setup p{font-size:.86rem;color:var(--ink-soft);margin-bottom:12px;}
+  .setup{background:var(--carbon-2);border:1px solid var(--line);border-radius:3px;padding:18px;box-shadow:var(--shadow);}
+  .setup p{font-size:.86rem;color:#8B8578;margin-bottom:12px;}
+  .setup p b{color:var(--paper);}
+  .setup code{background:var(--carbon-3);color:var(--jacket);padding:1px 5px;border-radius:2px;font-family:'Roboto Mono',monospace;font-size:.9em;}
   textarea{
     width:100%;min-height:300px;padding:12px;
     font-family:'Roboto Mono',monospace;font-size:.8rem;line-height:1.7;
-    border:1px solid var(--line);border-radius:2px;background:var(--canvas);color:var(--ink);resize:vertical;
+    border:1px solid var(--line);border-radius:2px;background:var(--carbon);color:var(--paper);resize:vertical;
   }
-  textarea:focus{outline:2px solid var(--corn);outline-offset:1px;}
-  .setup .act{margin-top:12px;border-color:var(--line);color:var(--ink);}
-  .setup .act.go{color:var(--ink);}
+  textarea:focus{outline:2px solid var(--jacket);outline-offset:1px;border-color:var(--jacket);}
+  .setup .act{margin-top:12px;}
+  .setup .act.go{color:var(--carbon);}
+
+  /* roster editor */
+  .roster-list{display:flex;flex-direction:column;gap:6px;}
+  .rteam{display:flex;align-items:center;gap:8px;}
+  .rseed{
+    font-family:'Roboto Mono',monospace;font-size:.72rem;color:var(--wag-lt);font-weight:700;
+    width:22px;text-align:right;flex:none;
+  }
+  .rname,.rplay{
+    padding:7px 9px;border:1px solid var(--line);border-radius:2px;
+    background:var(--carbon);color:var(--paper);font-family:'Public Sans',sans-serif;font-size:.86rem;
+    min-width:0;
+  }
+  .rname{flex:1 1 40%;font-weight:600;}
+  .rplay{flex:1 1 60%;font-weight:400;color:#8B8578;}
+  .rname:focus,.rplay:focus{outline:2px solid var(--jacket);outline-offset:1px;border-color:var(--jacket);background:var(--carbon-3);color:var(--paper);}
+  .rmove{display:flex;gap:3px;flex:none;}
+  .tiny{
+    width:26px;height:28px;border:1px solid var(--line);border-radius:2px;
+    background:var(--carbon);color:#8B8578;cursor:pointer;font-size:.78rem;line-height:1;
+  }
+  .tiny:hover:not(:disabled){background:var(--carbon-3);color:var(--jacket);}
+  .tiny:disabled{opacity:.3;cursor:default;}
+  .tiny.x:hover{background:var(--wag);color:#fff;border-color:var(--wag);}
+  .tiny:focus-visible{outline:2px solid var(--jacket);outline-offset:1px;}
+  .roster-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  #tHint b{color:var(--jacket);}
+  /* practice-mode banner — unmistakable, so nobody mistakes a sim for the real thing */
+  body.simming .masthead::before{background:var(--stripe-fine);height:14px;}
+  body.simming .simbar{display:block;}
+  .simbar{
+    display:none;background:var(--wag);color:#fff;text-align:center;
+    font-family:'Roboto Mono',monospace;font-size:.68rem;letter-spacing:.16em;
+    text-transform:uppercase;padding:5px 10px;font-weight:700;
+  }
+  @media (max-width:640px){
+    .rteam{flex-wrap:wrap;}
+    .rname,.rplay{flex:1 1 100%;}
+    .rseed{width:auto;}
+  }
 
   @media (max-width:640px){
     .masthead .wrap{flex-direction:column;align-items:flex-start;}
@@ -206,9 +292,14 @@
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
   @media print{
-    .rail,.toolbar,.tab{display:none;}
+    .rail,.toolbar,.tab,.masthead::after{display:none;}
     .panel{display:block!important;page-break-after:always;}
-    body{background:#fff;padding-bottom:0;}
+    body{background:#fff;color:#000;padding-bottom:0;}
+    .masthead{background:#fff;color:#000;}
+    .board,.tablewrap,.champ,.setup{background:#fff;border-color:#999;}
+    .tname,td,h2,.podium .pn{color:#000;}
+    .board-hd{background:#eee;}
+    th{background:#eee;color:#000;}
   }
 </style>
 </head>
@@ -216,14 +307,18 @@
 
 <header class="masthead">
   <div class="wrap">
-    <h1><span>Cedarville Pharmacy Orientation</span>Cornhole 2026</h1>
+    <div>
+      <h1><span>Cedarville School of Pharmacy · Orientation</span>Cornhole Classic</h1>
+      <div class="sponsor">Sponsored by Walgreens <span>Yellow Jacket Cornhole 2026</span></div>
+    </div>
     <div class="clock">
       <div>Rounds A · B · C &nbsp;<b>5 min each</b></div>
-      <div>Championship &nbsp;<b>1:15 PM</b></div>
+      <div>Placement round &nbsp;<b>1:15 PM</b></div>
     </div>
   </div>
 </header>
 
+<div class="simbar">Practice mode — scores are simulated</div>
 <nav class="rail" role="tablist" aria-label="Tournament rounds">
   <div class="wrap">
     <button class="tab" role="tab" aria-selected="true" data-p="A">Round A<span class="n" id="nA"></span></button>
@@ -277,12 +372,22 @@
   </section>
 
   <section class="panel" data-panel="T">
-    <div class="panel-head"><h2>Teams</h2><span class="played">One per line</span></div>
-    <p class="hint">Format: <code>Team name | Player one / Player two</code> — the players part is optional. Order sets the Round A pairings.</p>
+    <div class="panel-head"><h2>Teams</h2><span class="played" id="tState"></span></div>
+    <p class="hint" id="tHint"></p>
+
     <div class="setup">
-      <p>Paste your roster, then rebuild. Scores are cleared on rebuild.</p>
+      <div class="roster-list" id="rlist"></div>
+      <div class="roster-actions">
+        <button class="act" id="addTeam">Add a team</button>
+        <button class="act" id="bulk">Paste a full list…</button>
+      </div>
+    </div>
+
+    <div class="setup" id="bulkBox" hidden style="margin-top:14px;">
+      <p><b>Replace the whole roster.</b> One team per line: <code>Team name | Player one / Player two</code>. Order sets the Round A pairings. This clears every score.</p>
       <textarea id="roster" spellcheck="false"></textarea>
-      <button class="act go" id="rebuild">Rebuild tournament</button>
+      <button class="act go" id="rebuild">Replace roster and clear scores</button>
+      <button class="act" id="bulkCancel">Cancel</button>
     </div>
   </section>
 
@@ -291,8 +396,10 @@
 <div class="toolbar">
   <div class="wrap">
     <span class="status" id="status"></span>
+    <button class="act sim" id="sim" hidden>Simulate</button>
     <button class="act" id="print">Print</button>
     <button class="act" id="clear">Clear scores</button>
+    <button class="act danger" id="reset">Reset all</button>
   </div>
 </div>
 
@@ -334,12 +441,68 @@ function save(){ try{ localStorage.setItem(KEY, JSON.stringify({teams, nextId, s
 function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } }
 }
 
-/* ---------- roster ---------- */
+/* ---------- roster ----------
+   A team's id is permanent and unrelated to its position. Renaming a team
+   never changes its id, so pairings and scores stay attached to the right
+   people. Only add/remove/reorder changes the structure. */
+let nextId = 0;
 function parseRoster(txt){
   return txt.split('\n').map(l=>l.trim()).filter(Boolean).map((line,i)=>{
     const [name,players] = line.split('|').map(s=>s&&s.trim());
-    return {id:i, seed:i+1, name:name||`Team ${i+1}`, players:players||''};
+    return {id:nextId++, seed:i+1, name:name||`Team ${i+1}`, players:players||''};
   });
+}
+// Has any score been entered? Structural edits are guarded once true.
+function anyScores(){
+  return Object.values(scores).some(s=>s && (s[0]!=null || s[1]!=null));
+}
+function reseed(){ teams.forEach((t,i)=>t.seed=i+1); }
+
+/* ---------- roster editor ---------- */
+function drawRoster(){
+  const locked = anyScores();
+  const list = document.getElementById('rlist');
+  list.innerHTML = teams.map((t,i)=>`
+    <div class="rteam">
+      <span class="rseed">${i+1}</span>
+      <input class="rname" type="text" value="${esc(t.name)}" data-id="${t.id}" data-f="name"
+             aria-label="Team ${i+1} name" placeholder="Team name">
+      <input class="rplay" type="text" value="${esc(t.players)}" data-id="${t.id}" data-f="players"
+             aria-label="Team ${i+1} players" placeholder="Player one / Player two">
+      <span class="rmove">
+        <button class="tiny" data-move="up" data-i="${i}" ${i===0?'disabled':''} title="Move up" aria-label="Move team ${i+1} up">↑</button>
+        <button class="tiny" data-move="dn" data-i="${i}" ${i===teams.length-1?'disabled':''} title="Move down" aria-label="Move team ${i+1} down">↓</button>
+        <button class="tiny x" data-del="${i}" title="Remove team" aria-label="Remove team ${i+1}">×</button>
+      </span>
+    </div>`).join('');
+
+  document.getElementById('tState').textContent = `${teams.length} teams`;
+  document.getElementById('tHint').innerHTML = locked
+    ? `<b>Scores are in.</b> Edit any name or player list freely — it updates everywhere and never touches pairings or scores. Adding, removing, or reordering changes the bracket, so those ask first.`
+    : `Edit names and players anytime. Order sets the Round A pairings (1v2, 3v4…). Nothing locks until your first score.`;
+}
+
+// Rename: updates in place. No structural change, no score loss.
+function renameTeam(id, field, val){
+  const t = teams.find(x=>x.id===id);
+  if(!t) return;
+  t[field] = val;
+  // Names show on boards, standings and podium — refresh those, but never
+  // re-render the roster list itself or we'd destroy the field being typed in.
+  ['A','B','C'].forEach(drawRound);
+  drawStandings(); drawChamp();
+  save();
+}
+
+function structuralOK(what){
+  if(!anyScores()) return true;
+  return confirm(`${what}\n\nScores are already entered. Changing the team list re-draws every pairing, so all scores will be cleared. This cannot be undone.\n\nContinue?`);
+}
+function applyStructural(fn){
+  fn();
+  reseed();
+  scores = {}; lockedC = null; lockedP = null;
+  refresh(); drawRoster();
 }
 
 /* ---------- pairings ---------- */
@@ -572,6 +735,7 @@ function refreshDerived(){
   const dn  = ['A','B','C'].reduce((n,r)=>n+roundDone(r)[0],0);
   document.getElementById('status').innerHTML =
     `${teams.length} teams · ${BOARDS} boards · <b>${dn}/${tot}</b> games scored`;
+  simVisible();
   save();
 }
 
@@ -631,28 +795,149 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
+/* ---------- roster events ---------- */
+// Live rename — fires on every keystroke, never rebuilds the roster list.
+document.addEventListener('input', e=>{
+  const el = e.target;
+  if(el.tagName!=='INPUT' || !el.dataset.f || el.dataset.id===undefined) return;
+  renameTeam(+el.dataset.id, el.dataset.f, el.value);
+});
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button');
+  if(!b) return;
+
+  // reorder
+  if(b.dataset.move){
+    const i = +b.dataset.i, j = b.dataset.move==='up' ? i-1 : i+1;
+    if(j<0||j>=teams.length) return;
+    if(!structuralOK(`Move "${teams[i].name}" ${b.dataset.move==='up'?'up':'down'}?`)) return;
+    applyStructural(()=>{ [teams[i],teams[j]]=[teams[j],teams[i]]; });
+    return;
+  }
+  // remove
+  if(b.dataset.del!==undefined){
+    const i = +b.dataset.del;
+    if(teams.length<=4){ alert('You need at least 4 teams.'); return; }
+    if(!structuralOK(`Remove "${teams[i].name}"?`)) return;
+    applyStructural(()=>{ teams.splice(i,1); });
+    return;
+  }
+});
+
+document.getElementById('addTeam').addEventListener('click',()=>{
+  if(!structuralOK('Add a team?')) return;
+  applyStructural(()=>{ teams.push({id:nextId++, seed:teams.length+1, name:`Team ${teams.length+1}`, players:''}); });
+  const last = document.querySelector('.rteam:last-child .rname');
+  if(last){ last.focus(); last.select(); }
+});
+
+document.getElementById('bulk').addEventListener('click',()=>{
+  const box = document.getElementById('bulkBox');
+  box.hidden = !box.hidden;
+  if(!box.hidden){
+    document.getElementById('roster').value =
+      teams.map(t=>t.players?`${t.name} | ${t.players}`:t.name).join('\n');
+    document.getElementById('roster').focus();
+  }
+});
+document.getElementById('bulkCancel').addEventListener('click',()=>{
+  document.getElementById('bulkBox').hidden = true;
+});
+
 document.getElementById('rebuild').addEventListener('click',()=>{
   const next = parseRoster(document.getElementById('roster').value);
   if(next.length<4){ alert('Add at least 4 teams.'); return; }
   if(next.length%2){ alert(`${next.length} teams — you need an even number so nobody sits out.`); return; }
-  teams = next; scores = {}; lockedC = null; lockedP = null; refresh();
-  alert(`Built for ${teams.length} teams. Scores cleared.`);
+  if(!structuralOK('Replace the entire roster?')) return;
+  teams = next; scores = {}; lockedC = null; lockedP = null;
+  document.getElementById('bulkBox').hidden = true;
+  refresh(); drawRoster();
 });
 
 document.getElementById('clear').addEventListener('click',()=>{
-  if(confirm('Clear every score? The roster stays.')){ scores={}; lockedC=null; lockedP=null; refresh(); }
+  if(confirm('Clear every score? The roster stays.')){ scores={}; lockedC=null; lockedP=null; refresh(); drawRoster(); }
 });
 document.getElementById('print').addEventListener('click',()=>window.print());
+
+/* ---------- test tools ----------
+   Simulate fills the next unscored round with random results so the whole
+   flow can be exercised in seconds. It hides itself once real scoring is
+   under way, so it can't be bumped mid-tournament. */
+let simMode = false;
+
+function nextUnscoredRound(){
+  for(const r of ['A','B','C','P']){
+    const g = games(r);
+    if(!g.length) continue;
+    const done = g.every((_,i)=>{const s=scores[`${r}-${i}`];return s&&s[0]!=null&&s[1]!=null;});
+    if(!done) return r;
+  }
+  return null;
+}
+function simVisible(){
+  // Offer Simulate only before anything real is entered — or once sim mode is on.
+  document.getElementById('sim').hidden = anyScores() && !simMode;
+}
+function simulateRound(){
+  const r = nextUnscoredRound();
+  if(!r){ alert('Every round is already scored. Use "Clear scores" or "Reset all" to run it again.'); return; }
+  if(r==='C'){ if(!abDone()){ alert('Simulate Rounds A and B first — Round C seeds off their results.'); return; } lockC(); }
+  if(r==='P'){ if(!complete()){ alert('Finish pool play first — the placement round seeds off it.'); return; } lockP(); }
+  games(r).forEach((_,i)=>{
+    // games run to 21; winner takes it, loser lands somewhere below
+    const homeWins = Math.random()<0.5;
+    const lo = Math.floor(Math.random()*20);
+    scores[`${r}-${i}`] = homeWins ? [21,lo] : [lo,21];
+  });
+  refresh(); drawRoster();
+  document.querySelector(`.tab[data-p="${r==='P'?'F':r}"]`).click();
+  const nice = r==='P' ? 'the placement round' : `Round ${r}`;
+  setTimeout(()=>alert(`Simulated ${nice}. Check it over, then simulate again for the next one.`),60);
+}
+document.getElementById('sim').addEventListener('click',()=>{
+  if(!simMode){
+    if(!confirm('Simulate fills rounds with random scores so you can test the whole flow end to end.\n\nUse this on a practice copy, not during a real tournament.\n\nStart simulating?')) return;
+    simMode = true;
+    document.getElementById('sim').textContent = 'Simulate next round';
+    document.body.classList.add('simming');
+  }
+  simulateRound();
+});
+
+document.getElementById('reset').addEventListener('click',()=>{
+  const word = prompt('This clears every score AND restores the default roster.\nIt cannot be undone.\n\nType RESET to confirm:');
+  if(word===null) return;
+  if(word.trim().toUpperCase()!=='RESET'){ alert('Not reset — you have to type RESET.'); return; }
+  nextId = 0;
+  teams = parseRoster(DEFAULT_ROSTER);
+  scores = {}; lockedC = null; lockedP = null;
+  simMode = false;
+  document.body.classList.remove('simming');
+  document.getElementById('sim').textContent = 'Simulate';
+  refresh(); drawRoster();
+});
 
 /* ---------- boot ---------- */
 (function(){
   const saved = load();
-  document.getElementById('roster').value = saved?.roster || DEFAULT_ROSTER;
-  teams = parseRoster(document.getElementById('roster').value);
+  if(saved?.teams?.length){
+    teams = saved.teams;
+    nextId = saved.nextId ?? (Math.max(...teams.map(t=>t.id))+1);
+  } else {
+    teams = parseRoster(DEFAULT_ROSTER);
+  }
   scores = saved?.scores || {};
   lockedC = saved?.lockedC || null;
   lockedP = saved?.lockedP || null;
+  simMode = !!saved?.simMode;
+  if(simMode){
+    document.body.classList.add('simming');
+    document.getElementById('sim').textContent = 'Simulate next round';
+  }
+  reseed();
   refresh();
+  drawRoster();
 })();
 </script>
 </body>
